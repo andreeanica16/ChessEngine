@@ -1,22 +1,26 @@
-	 			 Chess Engine
+# Chess Engine
 
 Implementarea engine-ul de sah se bazeaza pe urmatoarea codificare:
--Tabla de sah va fi reprezentata in memorie ca o matrice de 9 x 9, incepand 
+- Tabla de sah va fi reprezentata in memorie ca o matrice de 9 x 9, incepand 
 numaratoarea liniilor si coloanelor de la 1
--Casutele goale vor avea valoarea 0 in ele
--Piesele albe vor fi reprezentate ca si numere pozitive
--Piesele negre vor fi reprezentate ca si numere negative
--Fiecare piesa va avea asociat un numar, prin care se va identifica unic
+- Casutele goale vor avea valoarea 0 in ele
+- Piesele albe vor fi reprezentate ca si numere pozitive
+- Piesele negre vor fi reprezentate ca si numere negative
+- Fiecare piesa va avea asociat un numar, prin care se va identifica unic
 piesa respectiva. Numarul este format astfel: 
-	numarUnic = (-1)^culoare * (tipPiesa * 10 + nrOrdine).
+	```
+	numarUnic = (-1)^culoare * (tipPiesa * 10 + nrOrdine)
+	```
 Astfel, asocierea pentru tipul pieselor este urmatoarea:
+```		
 		1 ... Rege/Regina
 		2 ... Nebun
 		3 ... Cal
 		4 ... Tura
-		5 ... Pion.
+		5 ... Pion 
+```
 Tabla la momentul initial va arata in felul urmator:
-
+```
 		-41 -31 -21 -11 -10 -22 -32 -42 
 		-51 -52 -53 -54 -55 -56 -57 -58 
 		  0   0   0   0   0   0   0   0 
@@ -25,58 +29,38 @@ Tabla la momentul initial va arata in felul urmator:
 		  0   0   0   0   0   0   0   0 
 		 51  52  53  54  55  56  57  58 
 		 41  31  21  11  10  22  32  42
+```
 
 Dupa citirea comenzilor "xboard" si "protover", engine-ul intra intr-o bucla
 infinta, asteptand comenzi de la xboard. Pentru a implementa functionalitatile
 necesare, vom folosi urmatoarele functii si variabile :
--colorToMove = specifica cine trebuie sa efectueze urmatoarea mutare
--engineColor = specifica culoarea cu care joaca engine-ul
--force       = specifica daca ne gasim in modul force
--lastMove    = retine ultima mutare efectuata
--positions   = un map care contine toate piesele existente pe tabla la un
+- colorToMove = specifica cine trebuie sa efectueze urmatoarea mutare
+- engineColor = specifica culoarea cu care joaca engine-ul
+- force       = specifica daca ne gasim in modul force
+- lastMove    = retine ultima mutare efectuata
+- positions   = un map care contine toate piesele existente pe tabla la un
 		moment dat, cheia fiind numarul piesei, iar valoarea fiind
 		pozitia ei curenta pe tabla. Pozitia unei piese va fi 
 		codificata linie*10 + coloana
 
-+translatePosition() = actualizeaza o pozitie de pe tabla in map-ul position 
-+initializeBoard()   = initializeaza tabla de sah, aseaza piesele la locul lor
+- translatePosition() = actualizeaza o pozitie de pe tabla in map-ul position 
+- initializeBoard()   = initializeaza tabla de sah, aseaza piesele la locul lor
 			si initializeaza map-ul position
-+readFromInput()     = citeste o comanda de la Xboard
-+makeMove()          = traduce o mutare intr-un sir de caractere, pentru a fi 
+- readFromInput()     = citeste o comanda de la Xboard
+- makeMove()          = traduce o mutare intr-un sir de caractere, pentru a fi 
 			trimis catre Xboard. Totodata actualizeaza si matricea
 			si mapul cu pozitii pentru piesa mutata. In cazul in 
 			care o piesa este capturata, functia o sterge din map
-+markMove()	      = traduce un sir de caractere primit de la Xboard repre
+- markMove()	      = traduce un sir de caractere primit de la Xboard repre
 			zentand o mutare si actualizeaza matricea si mapul
-+checkCell()          = verifica daca o pozitie data prin linie si coloana 
+- checkCell()          = verifica daca o pozitie data prin linie si coloana 
 			apartine limitelor tablei de joc
-+checkPiecePosition() = verifica daca o piesa a fost capturata sau nu
-+movePawn()	      = muta un pion dat ca parametru, gasind prima modalitate
+- checkPiecePosition() = verifica daca o piesa a fost capturata sau nu
+- movePawn()	      = muta un pion dat ca parametru, gasind prima modalitate
 			posibila
-+applyStrategy()      = aplica Strategia. Daca nu exista nici o mutare posibila,
+- applyStrategy()      = aplica Strategia. Daca nu exista nici o mutare posibila,
 			da resign pentru culoarea engine-ului
 
-
-Resposabilitati coechipieri:
--comune : gandirea strategie si modelul implementarii, elaborarea codului sursa
-	  (activitati realizate in timpul intalnirii face-to-face, 
-	  pentru o comunicare facila si eficienta)
--Teodora : organizarea codului in fisiere separate, adaugarea de comentarii, 
-	   elaborarea unui schelet initial pentru fisierul main
--Andreea : debugging pentru problemele generate de comenzile white, black, go
-	   si elaborarea fisierului README 
-
-Modaliate de compilare:
-cmake .
-make
-xboard -debug -fcp "./ladybugs"
-
-sau
-
-./run.sh
-
-Versiune de compilator pe care am testat: clang-1100.0.33.17
-Am folosit varianta c++ 17.
 
 Am ales sa ne bazam intreaga implementare pe o matrice
 numita attacked[color]. Aceasta contine campurile "atacate" de o anumita, 
@@ -91,9 +75,9 @@ Pentru a putea fi sah, regele trebuie sa aiba toate campurile din prejurul
 lui atacate(adica sa nu mai poata muta) si sa fie atacat la randul lui. 
 Calculculul acestei matrici ne va spune in orice moment cat de aproape suntem
 de sah, pentru o functie de evaluare care sa valorifice aceste lucruri.
--------------------------------------------------------------------------------
-Implementare reguli sah:
-(*) mutari
+
+## Implementare reguli sah:
+#### 1. Mutari
 Implementarea regulilor de sah sunt realizate prin implementarea functiilor 
 care ne genereaza toate mutarile ( atat cele obisnuite, cate si cele speciale
 precum enpassant, pawnPromotion si castling) si verificarea daca o culoare
@@ -118,7 +102,7 @@ captureaza ceva se intoarce piesa capturata si se sterge din map).
 In functia undoMoveMinimax este facut procedeul invers (vom avea nevoie
 in minimax sa "desfacem" miscarea anterioara).
 
-(*) en passant (functia applyMoveMinimax)
+#### 2. En passant (functia applyMoveMinimax)
 Pentru en passant, tinem minte in variabila globala panw2moves daca ultima
 mutare a fost efectuata de un pion (advers) care a mutat doua casute in fata.
 Daca aceasta variabila globala nu este empty, si mutarea curenta este facuta
@@ -126,7 +110,7 @@ de un pion inainteaza de pe randul pawn2moves la randul urmator si coloana
 pawn2moves, atunci are loc miscarea de en passant, iar captured devine
 pawn2moves.
 
-(*) rocada
+#### 3. Rocada
 Functia markAttacked apeleaza, la sfarsit, canDoCastling care insereaza in
 hash-ul de miscari 0, 1 sau 2 rocade, daca acestea sunt permise.
 Variabilele kingMoved, rookLeftMoved, rookRightMoved retin numarul de miscari
@@ -137,11 +121,11 @@ faptul ca intre rege si tura nu este nicio piesa (adica regele este atacat de
 tura), si ca niciun camp dintre rege si tura nu este atacat de vreo piesa a
 adversarului.
 
-(*) sah
+#### 4. Sah
 Functia isCheck verifica daca regele se afla in sah, adica daca pozitia pe
 care se afla este atacata de vreo piesa a oponentului.
 
-(*) sah mat
+#### 5. Sah mat
 Functia isMat returneaza true daca este sah mat pentru color.
 Se apeleaza intai functia kingMobility, care insereaza in hash-ul de miscari
 daca regele poate sa se miste pentru a captura piesa care ii da sah, sau
@@ -156,8 +140,8 @@ Se analizeaza apoi cazurile in care se poate bloca atacatorul (doar daca e
 tura, regina sau nebun). Se verifica daca vreunul din campurile dintre
 atacator si rege poate fi blocat de vreo piesa de culoarea atacata. Daca da,
 atunci se insereaza in hash-ul de mutari.
--------------------------------------------------------------------------------
-Implementare algoritm Alpha-Beta Pruning:
+
+## Implementare algoritm Alpha-Beta Pruning:
 
 Pentru functia de evaluare, am folosit o varianta care imbina numarul de piese
 de un anumit fel de pe tabla (fiecare piesa are o valoare asociata), dar si
@@ -168,5 +152,19 @@ https://www.chessprogramming.org/Simplified_Evaluation_Function
 Am imbunatatit aceasta functie de evaluare adaugand scoruri suplimentare pentru
 cazuri particulare (spre exemplu, incurajam engine-ul sa dea mereu sah).
 
-Specificatii tehnice:
-(*) standard c++ folosit: c++17
+## Modaliate de compilare:
+```
+cmake .
+make
+xboard -debug -fcp "./ladybugs"
+```
+
+sau
+```
+./run.sh
+```
+Versiune de compilator pe care am testat: clang-1100.0.33.17
+Am folosit varianta c++ 17.
+
+### Specificatii tehnice:
+standard c++ folosit: c++17
